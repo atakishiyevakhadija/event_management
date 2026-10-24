@@ -1,0 +1,140 @@
+package com.event.management.service.impls;
+
+import com.event.management.model.dto.CreateEventRequest;
+import com.event.management.model.dto.EventDTO;
+import com.event.management.model.dto.UpdateEventRequest;
+import com.event.management.model.entity.Category;
+import com.event.management.model.entity.Event;
+import com.event.management.model.entity.Location;
+import com.event.management.model.entity.User;
+import com.event.management.model.mapper.EventMapper;
+import com.event.management.repository.CategoryRepository;
+import com.event.management.repository.EventRepository;
+import com.event.management.repository.LocationRepository;
+import com.event.management.service.interfaces.EventService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class EventServiceImpl implements EventService {
+    private final EventRepository eventRepository;
+    private final EventMapper eventMapper;
+    private final CategoryRepository categoryRepository;
+    private final LocationRepository locationRepository;
+
+    @Override
+    public EventDTO create(CreateEventRequest request) {
+        Event event = new Event();
+        event.setTitle(request.getTitle());
+        event.setDescription(request.getDescription());
+        event.setCapacity(request.getCapacity());
+        event.setPrice(request.getPrice());
+        event.setEventDate(request.getEventDate());
+        event.setCreatedAt(LocalDateTime.now());
+        event.setCategory(categoryRepository.findById(request.getCategoryId()).orElseThrow());
+        event.setLocation(locationRepository.findById(request.getLocationId()).orElseThrow());
+
+        Event saved = eventRepository.save(event);
+
+        return eventMapper.mapToDto(saved);
+    }
+
+    @Override
+    public EventDTO update(Long id, UpdateEventRequest updateRequest) {
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Event not found!"));
+        event.setTitle(updateRequest.getTitle());
+        event.setDescription(updateRequest.getDescription());
+        event.setCapacity(updateRequest.getCapacity());
+        event.setPrice(updateRequest.getPrice());
+        event.setEventDate(updateRequest.getEventDate());
+        event.setCreatedAt(updateRequest.getCreatedAt());
+        event.setUpdatedAt(LocalDateTime.now());
+        event.setCategory(categoryRepository.findById(updateRequest.getCategoryId()).orElseThrow());
+        event.setLocation(locationRepository.findById(updateRequest.getLocationId()).orElseThrow());
+
+        Event updated = eventRepository.save(event);
+
+        return eventMapper.mapToDto(updated);
+    }
+
+    @Override
+    public Page<EventDTO> getAll(int page, int size, String sortBy, String direction) {
+        Sort sort = direction.equalsIgnoreCase("asc") ?
+                Sort.by(sortBy).ascending() :
+                Sort.by(sortBy).descending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<Event> events = eventRepository.findAll(pageable);
+
+        return events.map(eventMapper::mapToDto);
+    }
+
+    @Override
+    public EventDTO getById(Long id) {
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Event not found!"));
+
+        return eventMapper.mapToDto(event);
+    }
+
+    @Override
+    public List<EventDTO> searchByTitle(String title) {
+        List<Event> event = eventRepository.searchByTitleContainingIgnoreCase(title);
+
+        return event.stream()
+                .map(eventMapper::mapToDto)
+                .toList();
+    }
+
+    @Override
+    public List<EventDTO> getByCategory(Category category) {
+        List<Event> event = eventRepository.findByCategory(category);
+
+        return event.stream()
+                .map(eventMapper::mapToDto)
+                .toList();
+    }
+
+    @Override
+    public List<EventDTO> getByOrganizer(User organizer) {
+        List<Event> event = eventRepository.findByOrganizer(organizer);
+
+        return event.stream()
+                .map(eventMapper::mapToDto)
+                .toList();
+    }
+
+    @Override
+    public List<EventDTO> getByEventDate(LocalDateTime eventDate) {
+        List<Event> event = eventRepository.findByEventDate(eventDate);
+
+        return event.stream()
+                .map(eventMapper::mapToDto)
+                .toList();
+    }
+
+    @Override
+    public List<EventDTO> getByLocation(Location location) {
+        List<Event> event = eventRepository.findByLocation(location);
+
+        return event.stream()
+                .map(eventMapper::mapToDto)
+                .toList();
+    }
+
+    @Override
+    public void delete(Long id) {
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Event not found!"));
+        eventRepository.delete(event);
+    }
+}
