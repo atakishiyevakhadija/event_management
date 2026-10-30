@@ -1,5 +1,6 @@
 package com.event.management.service.impls;
 
+import com.event.management.exceptions.LocationNotFoundException;
 import com.event.management.model.dto.CreateLocationRequest;
 import com.event.management.model.dto.LocationDTO;
 import com.event.management.model.dto.UpdateLocationRequest;
@@ -37,7 +38,7 @@ public class LocationServiceImpl implements LocationService {
     @Override
     public LocationDTO update(Long id, UpdateLocationRequest updateRequest) {
         Location location = locationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Location not found!"));
+                .orElseThrow(() -> new LocationNotFoundException("Location not found!"));
         location.setName(updateRequest.getName());
         location.setCity(updateRequest.getCity());
         location.setAddress(updateRequest.getAddress());
@@ -63,7 +64,7 @@ public class LocationServiceImpl implements LocationService {
     @Override
     public LocationDTO getById(Long id) {
         Location location = locationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Location not found!"));
+                .orElseThrow(() -> new LocationNotFoundException("Location not found!"));
 
         return locationMapper.mapToDto(location);
     }
@@ -71,7 +72,7 @@ public class LocationServiceImpl implements LocationService {
     @Override
     public void delete(Long id) {
         Location location = locationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Location not found!"));
+                .orElseThrow(() -> new LocationNotFoundException("Location not found!"));
         locationRepository.delete(location);
     }
 }

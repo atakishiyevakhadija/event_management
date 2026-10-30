@@ -23,6 +23,10 @@ public class EventMapper {
         dto.setLocationId(event.getLocation().getId());
         dto.setLocationName(event.getLocation().getName());
 
+        if (event.getOrganizer() != null) {
+            dto.setOrganizerId(event.getOrganizer().getId());
+        }
+
         return dto;
     }
 }

@@ -1,5 +1,6 @@
 package com.event.management.service.impls;
 
+import com.event.management.exceptions.CategoryNotFoundException;
 import com.event.management.model.dto.CategoryDTO;
 import com.event.management.model.dto.CreateCategoryRequest;
 import com.event.management.model.dto.UpdateCategoryRequest;
@@ -36,7 +37,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public CategoryDTO update(Long id, UpdateCategoryRequest updateRequest) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Category not found!"));
+                .orElseThrow(() -> new CategoryNotFoundException("Category not found!"));
 
         category.setName(updateRequest.getName());
         category.setDescription(updateRequest.getDescription());
@@ -61,7 +62,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public CategoryDTO getById(Long id) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Category not found!"));
+                .orElseThrow(() -> new CategoryNotFoundException("Category not found!"));
 
         return categoryMapper.mapToDto(category);
     }
@@ -78,7 +79,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public void delete(Long id) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Category not found!"));
+                .orElseThrow(() -> new CategoryNotFoundException("Category not found!"));
         categoryRepository.delete(category);
     }
 }

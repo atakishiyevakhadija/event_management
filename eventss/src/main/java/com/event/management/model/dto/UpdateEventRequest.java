@@ -22,10 +22,11 @@ public class UpdateEventRequest {
     private Long capacity;
     @Min(value = 0, message = "Price cannot be less than 0!")
     private Double price;
-    @NotBlank(message = "Event Date is required!")
+    @NotNull(message = "Event Date is required!")
     private LocalDateTime eventDate;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Long categoryId;
     private Long locationId;
+    private Long organizerId;
 }

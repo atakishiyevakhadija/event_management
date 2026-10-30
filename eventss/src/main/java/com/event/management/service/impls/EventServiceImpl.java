@@ -1,5 +1,11 @@
 package com.event.management.service.impls;
 
+import com.event.management.exceptions.CategoryNotFoundException;
+import com.event.management.exceptions.EventNotFoundException;
+import com.event.management.exceptions.LocationNotFoundException;
+import com.event.management.exceptions.UserNotFoundException;
+import com.event.management.filter.EventFilter;
+import com.event.management.filter.EventSpecification;
 import com.event.management.model.dto.CreateEventRequest;
 import com.event.management.model.dto.EventDTO;
 import com.event.management.model.dto.UpdateEventRequest;
@@ -11,6 +17,7 @@ import com.event.management.model.mapper.EventMapper;
 import com.event.management.repository.CategoryRepository;
 import com.event.management.repository.EventRepository;
 import com.event.management.repository.LocationRepository;
+import com.event.management.repository.UserRepository;
 import com.event.management.service.interfaces.EventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -29,6 +36,8 @@ public class EventServiceImpl implements EventService {
     private final EventMapper eventMapper;
     private final CategoryRepository categoryRepository;
     private final LocationRepository locationRepository;
+    private final UserRepository userRepository;
+    private final EventSpecification eventSpecification;
 
     @Override
     public EventDTO create(CreateEventRequest request) {
@@ -39,8 +48,9 @@ public class EventServiceImpl implements EventService {
         event.setPrice(request.getPrice());
         event.setEventDate(request.getEventDate());
         event.setCreatedAt(LocalDateTime.now());
-        event.setCategory(categoryRepository.findById(request.getCategoryId()).orElseThrow());
-        event.setLocation(locationRepository.findById(request.getLocationId()).orElseThrow());
+        event.setCategory(categoryRepository.findById(request.getCategoryId()).orElseThrow(() -> new CategoryNotFoundException("Category not found!")));
+        event.setLocation(locationRepository.findById(request.getLocationId()).orElseThrow(() -> new LocationNotFoundException("Location not found!")));
+        event.setOrganizer(userRepository.findById(request.getOrganizerId()).orElseThrow(() -> new UserNotFoundException("Organizer not found!")));
 
         Event saved = eventRepository.save(event);
 
@@ -50,7 +60,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public EventDTO update(Long id, UpdateEventRequest updateRequest) {
         Event event = eventRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Event not found!"));
+                .orElseThrow(() -> new EventNotFoundException("Event not found!"));
         event.setTitle(updateRequest.getTitle());
         event.setDescription(updateRequest.getDescription());
         event.setCapacity(updateRequest.getCapacity());
@@ -58,8 +68,9 @@ public class EventServiceImpl implements EventService {
         event.setEventDate(updateRequest.getEventDate());
         event.setCreatedAt(updateRequest.getCreatedAt());
         event.setUpdatedAt(LocalDateTime.now());
-        event.setCategory(categoryRepository.findById(updateRequest.getCategoryId()).orElseThrow());
-        event.setLocation(locationRepository.findById(updateRequest.getLocationId()).orElseThrow());
+        event.setCategory(categoryRepository.findById(updateRequest.getCategoryId()).orElseThrow(() -> new CategoryNotFoundException("Category not found!")));
+        event.setLocation(locationRepository.findById(updateRequest.getLocationId()).orElseThrow(() -> new LocationNotFoundException("Location not found!")));
+        event.setOrganizer(userRepository.findById(updateRequest.getOrganizerId()).orElseThrow(() -> new UserNotFoundException("Organizer not found!")));
 
         Event updated = eventRepository.save(event);
 
@@ -79,9 +90,21 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    public Page<EventDTO> filteredEvents(int page, int size, String sortBy, String direction, EventFilter filter) {
+        Sort sort = direction.equalsIgnoreCase("asc") ?
+                Sort.by(sortBy).ascending() :
+                Sort.by(sortBy).descending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<Event> events = eventRepository.findAll(EventSpecification.filterEvents(filter), pageable);
+        return events.map(eventMapper::mapToDto);
+    }
+
+
+    @Override
     public EventDTO getById(Long id) {
         Event event = eventRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Event not found!"));
+                .orElseThrow(() -> new EventNotFoundException("Event not found!"));
 
         return eventMapper.mapToDto(event);
     }
@@ -96,8 +119,8 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventDTO> getByCategory(Category category) {
-        List<Event> event = eventRepository.findByCategory(category);
+    public List<EventDTO> getByCategory(Long categoryId) {
+        List<Event> event = eventRepository.findByCategory_Id(categoryId);
 
         return event.stream()
                 .map(eventMapper::mapToDto)
@@ -105,8 +128,8 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventDTO> getByOrganizer(User organizer) {
-        List<Event> event = eventRepository.findByOrganizer(organizer);
+    public List<EventDTO> getByOrganizer(Long organizerId) {
+        List<Event> event = eventRepository.findByOrganizer_Id(organizerId);
 
         return event.stream()
                 .map(eventMapper::mapToDto)
@@ -123,8 +146,8 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventDTO> getByLocation(Location location) {
-        List<Event> event = eventRepository.findByLocation(location);
+    public List<EventDTO> getByLocation(Long locationId) {
+        List<Event> event = eventRepository.findByLocation_Id(locationId);
 
         return event.stream()
                 .map(eventMapper::mapToDto)
@@ -134,7 +157,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public void delete(Long id) {
         Event event = eventRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Event not found!"));
+                .orElseThrow(() -> new EventNotFoundException("Event not found!"));
         eventRepository.delete(event);
     }
 }

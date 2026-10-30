@@ -9,7 +9,6 @@ public interface CategoryService {
     CategoryDTO create(CreateCategoryRequest request);
     CategoryDTO update(Long id, UpdateCategoryRequest updateRequest);
     Page<CategoryDTO> getAll(int page, int size, String sortBy, String direction);
-    //    Page<CategoryDTO> filteredBooks(int page, int size, String sortBy, String direction, EventFilter filter);
     CategoryDTO getById(Long id);
     List<CategoryDTO> getByName(String name);
     void delete(Long id);

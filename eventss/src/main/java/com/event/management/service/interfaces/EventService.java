@@ -1,5 +1,6 @@
 package com.event.management.service.interfaces;
 
+import com.event.management.filter.EventFilter;
 import com.event.management.model.dto.CreateEventRequest;
 import com.event.management.model.dto.EventDTO;
 import com.event.management.model.dto.UpdateEventRequest;
@@ -16,12 +17,12 @@ public interface EventService {
     EventDTO create(CreateEventRequest request);
     EventDTO update(Long id, UpdateEventRequest updateRequest);
     Page<EventDTO> getAll(int page, int size, String sortBy, String direction);
-    //    Page<EventDTO> filteredBooks(int page, int size, String sortBy, String direction, EventFilter filter);
+    Page<EventDTO> filteredEvents(int page, int size, String sortBy, String direction, EventFilter filter);
     EventDTO getById(Long id);
     List<EventDTO> searchByTitle(String title);
-    List<EventDTO> getByCategory(Category category);
-    List<EventDTO> getByOrganizer(User organizer);
+    List<EventDTO> getByCategory(Long categoryId);
+    List<EventDTO> getByOrganizer(Long organizerId);
     List<EventDTO> getByEventDate(LocalDateTime eventDate);
-    List<EventDTO> getByLocation(Location location);
+    List<EventDTO> getByLocation(Long locationId);
     void delete(Long id);
 }
